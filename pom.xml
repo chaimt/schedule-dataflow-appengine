@@ -60,7 +60,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>com.behalf.migration.dataflow.salesforce.ScheduleDataflow</mainClass>
+                            <mainClass>com.behalf.migration.dataflow.utils.ScheduleDataflow</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

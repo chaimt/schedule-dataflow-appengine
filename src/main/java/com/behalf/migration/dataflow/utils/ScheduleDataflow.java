@@ -1,4 +1,4 @@
-package com.behalf.migration.dataflow.salesforce;
+package com.behalf.migration.dataflow.utils;
 
 import com.behalf.migration.utils.LogUtils;
 import org.slf4j.Logger;
