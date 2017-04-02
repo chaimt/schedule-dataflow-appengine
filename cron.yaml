@@ -1,0 +1,5 @@
+cron:
+ - description: Run SF Export/Import pipeline
+   url: /dataflow/execute?pipeline=com.turel.migration.dataflow.salesforce.LoadSalesforceData&project=bq-migration3&datasetId=salesforce&bucketName=bq-data3&stagingLocation=gs://bq-data3/SFtoBQApp/&output=bq-migration3:salesforce.temp&tempLocation=gs://bq-data3/tempExport&SFClientId=id&SFUserName=user@gmail.com&SFPassword=myPassword&SFSecurityToken=token&SFSandbox=true&numWorkers=10
+   schedule: every 30 mins
+   target: schedual-dataflow
