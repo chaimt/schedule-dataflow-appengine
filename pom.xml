@@ -9,7 +9,13 @@
     <artifactId>schedual-dataflow-appengine</artifactId>
     <name>Appengine Scheduling for Google Dataflow</name>
     <description>Google AppEngine Application to run Dataflow by schedual</description>
-    <url>http://www.behalf.com</url>
+    <url>http://www.turel.com</url>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>1.5.3.RELEASE</version>
+    </parent>
 
     <packaging>jar</packaging>
 
@@ -28,42 +34,80 @@
 
         <junit.version>4.12</junit.version>
         <slf4j.version>1.7.24</slf4j.version>
-        <google-cloud-dataflow-java-sdk-all.version>2.0.0-beta2</google-cloud-dataflow-java-sdk-all.version>
-        <spark-core.version>2.5.5</spark-core.version>
-        <appengine-maven-plugin.version>1.2.1</appengine-maven-plugin.version>
+        <google-cloud-dataflow-java-sdk-all.version>2.0.0-beta3</google-cloud-dataflow-java-sdk-all.version>
+        <beam.version>2.0.0</beam.version>
+        <spark-core.version>2.6.0</spark-core.version>
+        <appengine-maven-plugin.version>1.3.1</appengine-maven-plugin.version>
         <app.stage.artifact>
-            ${project.build.directory}/migration-dataflow-appengine-1.0.0-SNAPSHOT-jar-with-dependencies.jar
+            ${project.build.directory}/migration-dataflow-appengine-1.0.0-SNAPSHOT.jar
         </app.stage.artifact>
+        <json.version>20170516</json.version>
+        <javax.ws.rs-api.version>2.1-m07</javax.ws.rs-api.version>
+        <google-api-client.version>1.22.0</google-api-client.version>
+        <google-api-services-script.version>v1-rev82-1.22.0</google-api-services-script.version>
+        <quartz.version>2.2.1</quartz.version>
+        <start-class>com.turel.migration.dataflow.salesforce.ScheduleDataflowMVC</start-class>
     </properties>
 
 
     <build>
         <plugins>
+
             <plugin>
-                <groupId>com.google.cloud.tools</groupId>
-                <artifactId>appengine-maven-plugin</artifactId>
-                <version>${appengine-maven-plugin.version}</version>
-            </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <version>1.5.3.RELEASE</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <keepDependenciesWithProvidedScope>true</keepDependenciesWithProvidedScope>
+                    <createDependencyReducedPom>true</createDependencyReducedPom>
+                    <filters>
+                        <filter>
+                            <artifact>*:*</artifact>
+                            <excludes>
+                                <exclude>META-INF/*.SF</exclude>
+                                <exclude>META-INF/*.DSA</exclude>
+                                <exclude>META-INF/*.RSA</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
+                </configuration>
                 <executions>
                     <execution>
                         <phase>package</phase>
                         <goals>
-                            <goal>single</goal>
+                            <goal>shade</goal>
                         </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/spring.handlers</resource>
+                                </transformer>
+                                <transformer implementation="org.springframework.boot.maven.PropertiesMergingResourceTransformer">
+                                    <resource>META-INF/spring.factories</resource>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/spring.schemas</resource>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>${start-class}</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <archive>
-                        <manifest>
-                            <mainClass>com.behalf.migration.dataflow.utils.ScheduleDataflow</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>appengine-maven-plugin</artifactId>
+                <version>${appengine-maven-plugin.version}</version>
             </plugin>
         </plugins>
     </build>
@@ -76,23 +120,38 @@
         </dependency>
 
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>${json.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+            <version>${javax.ws.rs-api.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.google.cloud.dataflow</groupId>
             <artifactId>google-cloud-dataflow-java-sdk-all</artifactId>
             <version>${google-cloud-dataflow-java-sdk-all.version}</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.apache.beam/beam-runners-google-cloud-dataflow-java -->
-        <dependency>
-            <groupId>org.apache.beam</groupId>
-            <artifactId>beam-runners-google-cloud-dataflow-java</artifactId>
-            <version>0.5.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.turkel</groupId>
-            <artifactId>dataflow-package</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>com.turkel</groupId>-->
+            <!--<artifactId>dataflow-package</artifactId>-->
+            <!--<version>1.0.0-SNAPSHOT</version>-->
+        <!--</dependency>-->
 
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -121,7 +180,10 @@
             <scope>test</scope>
         </dependency>
 
+
     </dependencies>
+
+
 
 
 </project>

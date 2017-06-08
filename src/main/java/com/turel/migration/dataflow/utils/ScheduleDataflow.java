@@ -1,6 +1,5 @@
-package com.behalf.migration.dataflow.utils;
+package com.turel.migration.dataflow.utils;
 
-import com.behalf.migration.utils.LogUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -26,7 +25,7 @@ public class ScheduleDataflow {
 
         get("/dataflow/execute", (req, res) -> {
             try {
-                LOG.info(LogUtils.prefixLog("start pipeline"));
+                LOG.info("start pipeline");
                 String pipline = req.queryParams(PIPELINE);
                 if (pipline==null)
                     throw new RuntimeException("pipeline parameter is missing");
@@ -36,19 +35,19 @@ public class ScheduleDataflow {
                 List<String> appArgs = getArgs(req,Arrays.asList(PIPELINE));
                 String[] appParams = new String[appArgs.size()];
                 appParams = appArgs.toArray(appParams);
-                LOG.info(LogUtils.prefixLog("Running dataflow with {}"), appArgs.toString());
+                LOG.info("Running dataflow with " + appArgs.toString());
 
                 method.invoke(null,(Object)appParams);
 
                 return "Running with params:" + appArgs.toString();
             } catch (Exception e) {
-                LOG.error(LogUtils.prefixLog(e.getMessage()));
+                LOG.error(e.getMessage());
                 return "error: " + e.getMessage();
             }
         });
 
         get("/", (req, res) -> {
-            LOG.info(LogUtils.prefixLog("request main"));
+            LOG.info("request main");
             return "Scheduler Running";
         });
 

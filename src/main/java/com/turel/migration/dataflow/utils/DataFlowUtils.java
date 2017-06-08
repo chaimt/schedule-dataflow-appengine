@@ -1,9 +1,7 @@
-package com.behalf.migration.dataflow.utils;
+package com.turel.migration.dataflow.utils;
 
-import com.behalf.migration.utils.LogUtils;
 import com.google.api.services.dataflow.model.Job;
 import com.google.api.services.dataflow.model.ListJobsResponse;
-import javaslang.control.Try;
 import org.apache.beam.runners.dataflow.DataflowClient;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.options.Default;
@@ -23,13 +21,13 @@ import java.util.stream.Collectors;
  * Utilities for Dataflow processes
  */
 public class DataFlowUtils {
-    public enum JobStatus{
+    public enum JobStatus {
         Running,
         QuitePeriod,
         Nothing
     }
 
-    public interface JobRunOptions  extends DataflowPipelineOptions{
+    public interface JobRunOptions extends DataflowPipelineOptions {
         @Description("Quite Period from last job start. In minutes")
         @Default.Integer(5)
         Integer getQuitePeriod();
@@ -38,11 +36,11 @@ public class DataFlowUtils {
     }
 
 
-    public static Pair<JobStatus,String> isJobRunning(DataflowPipelineOptions options, String jobName, int jobIntervalinMinutes) throws IOException {
+    public static Pair<JobStatus, String> isJobRunning(DataflowPipelineOptions options, String jobName, int jobIntervalinMinutes) throws IOException {
         DataflowClient dataflowClient = DataflowClient.create(options);
         ListJobsResponse currentJobs = dataflowClient.listJobs(null);
         final List<Job> jobs = currentJobs.getJobs();
-        if (jobs!=null) {
+        if (jobs != null) {
             List<Job> runningJobs = jobs.stream()
                     .filter(job -> job.getName().startsWith(jobName))
                     .filter(job -> job.getCurrentState().equals("JOB_STATE_RUNNING"))
@@ -57,30 +55,31 @@ public class DataFlowUtils {
                     long millis = ISODateTimeFormat.dateTimeParser().parseDateTime(job_state_done.get().getCreateTime()).getMillis();
                     long passedMinutes = (System.currentTimeMillis() - millis) / 1000 / 60;
                     if (passedMinutes < jobIntervalinMinutes)
-                        return Pair.of(JobStatus.QuitePeriod,job_state_done.get().getCreateTime());
+                        return Pair.of(JobStatus.QuitePeriod, job_state_done.get().getCreateTime());
                     else
-                        return Pair.of(JobStatus.Nothing,"");
+                        return Pair.of(JobStatus.Nothing, "");
                 }
 
             } else
-                return Pair.of(JobStatus.Running,runningJobs.get(0).getCreateTime());
+                return Pair.of(JobStatus.Running, runningJobs.get(0).getCreateTime());
         }
-        return Pair.of(JobStatus.Nothing,"");
+        return Pair.of(JobStatus.Nothing, "");
     }
 
-    public static Try<Boolean> canJobRun(JobRunOptions options, Class<?> jobClass, int quitePeriod, Logger LOG)  {
-        return Try.of(() -> {
+    public static Boolean canJobRun(JobRunOptions options, Class<?> jobClass, int quitePeriod, Logger LOG) {
+        try {
             int lastPackage = jobClass.getCanonicalName().lastIndexOf(".");
-            String className = jobClass.getCanonicalName().substring(lastPackage+1, jobClass.getCanonicalName().length());
+            String className = jobClass.getCanonicalName().substring(lastPackage + 1, jobClass.getCanonicalName().length());
             Pair<JobStatus, String> jobRunning = DataFlowUtils.isJobRunning(options, className.toLowerCase(), quitePeriod);
             if (jobRunning.getKey() != DataFlowUtils.JobStatus.Nothing) {
-                LOG.warn(LogUtils.prefixLog("job {} {} [{}min QP - {}]"), className,jobRunning.getKey(),options.getQuitePeriod(),jobRunning.getValue());
+                LOG.warn(String.format("job %s %s [%smin QP - %s]"), className, jobRunning.getKey(), options.getQuitePeriod(), jobRunning.getValue());
                 return false;
             }
             return true;
-        });
+        } catch (Exception e) {
+            return false;
+        }
     }
-
 
 
 }
